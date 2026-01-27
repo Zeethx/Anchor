@@ -1,14 +1,17 @@
 "use client";
 
-import { Anchor, ArrowRight, Zap, Target, Music, StickyNote, Flame } from "lucide-react";
+import { Anchor, ArrowRight, Zap, Target, Music, StickyNote, Flame, Smartphone, Apple, Share, MoreVertical, PlusSquare, Download, Compass } from "lucide-react";
+import { useState } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 export function LandingPage() {
+  const [platform, setPlatform] = useState<"ios" | "android">("ios");
+
   return (
-    <div className="relative min-h-screen overflow-hidden bg-background text-foreground selection:bg-primary/20">
+    <div className="relative bg-background text-foreground selection:bg-primary/20">
       {/* Meditative Background Elements */}
-      <div className="absolute inset-0 z-0">
+      <div className="absolute inset-0 pointer-events-none">
         <div className="absolute -left-[10%] -top-[10%] h-[40%] w-[40%] rounded-full bg-primary/5 blur-[120px] animate-pulse" />
         <div className="absolute -right-[10%] -bottom-[10%] h-[40%] w-[40%] rounded-full bg-blue-500/5 blur-[120px] animate-pulse shadow-2xl" />
       </div>
@@ -22,13 +25,13 @@ export function LandingPage() {
             </div>
             <span className="text-xl font-bold tracking-tight">Anchor</span>
           </div>
-          <Link 
-            href="/auth" 
+          <button 
+            onClick={() => document.getElementById('install')?.scrollIntoView({ behavior: 'smooth' })}
             className="group flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-5 py-2 text-sm font-medium transition-all hover:bg-primary hover:text-white"
           >
-            Enter Anchor
-            <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
-          </Link>
+            <Download size={16} className="text-primary group-hover:text-white transition-colors" />
+            Install Guide
+          </button>
         </nav>
 
         {/* Hero Section */}
@@ -48,7 +51,7 @@ export function LandingPage() {
               href="/auth" 
               className="inline-flex h-14 items-center justify-center rounded-2xl bg-primary px-10 text-lg font-semibold text-primary-foreground shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95"
             >
-              Start Your Ritual
+              Anchor Your Day
             </Link>
           </div>
         </section>
@@ -100,6 +103,85 @@ export function LandingPage() {
           </div>
         </div>
 
+        {/* Installation Guide */}
+        <section id="install" className="mt-40 scroll-mt-24 animate-in fade-in duration-1000 delay-[1100ms]">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold tracking-tight mb-4">Install Anchor</h2>
+            <p className="text-muted-foreground">Add it to your home screen for a seamless experience.</p>
+          </div>
+
+          <div className="mx-auto max-w-xl">
+            <div className="flex justify-center gap-4 mb-8">
+              <button 
+                onClick={() => setPlatform("ios")}
+                className={cn(
+                  "flex items-center gap-2 px-6 py-2.5 rounded-2xl transition-all border",
+                  platform === "ios" 
+                    ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20" 
+                    : "bg-muted/50 border-border hover:border-primary/50"
+                )}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.05 20.28c-.96.95-2.04 2.14-3.41 2.14-1.31 0-1.76-.79-3.29-.79-1.54 0-2.05.77-3.29.79-1.35.02-2.5-1.24-3.41-2.14C2 18.67 1 15.65 1 12.83c0-4.59 2.97-7.01 5.86-7.01 1.54 0 2.89.84 3.79.84.9 0 2.44-.99 4.22-.81.75.03 2.85.3 4.19 2.26-1.1.66-1.85 1.74-1.85 3.33 0 1.94 1.58 3.32 3.65 4.1a12.65 12.65 0 0 1-1.86 3.74zM12.03 5.37c.81-1 1.34-2.39 1.19-3.77-1.18.05-2.61.79-3.46 1.79-.76.88-1.42 2.31-1.24 3.66 1.31.1 2.65-.63 3.51-1.68z"/>
+                </svg>
+                iOS
+              </button>
+              <button 
+                onClick={() => setPlatform("android")}
+                className={cn(
+                  "flex items-center gap-2 px-6 py-2.5 rounded-2xl transition-all border",
+                  platform === "android" 
+                    ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20" 
+                    : "bg-muted/50 border-border hover:border-primary/50"
+                )}
+              >
+                <Smartphone size={18} />
+                Android
+              </button>
+            </div>
+
+            <div className="p-8 rounded-[2rem] border border-border bg-card/50 backdrop-blur-sm">
+              {platform === "ios" ? (
+                <ul className="space-y-6">
+                  <InstructionStep 
+                    number="1" 
+                    icon={<Compass size={18} className="text-primary" />} 
+                    text="Open Anchor in Safari browser." 
+                  />
+                  <InstructionStep 
+                    number="2" 
+                    icon={<Share size={18} className="text-blue-500" />} 
+                    text="Tap the Share button at the bottom of the screen." 
+                  />
+                  <InstructionStep 
+                    number="3" 
+                    icon={<PlusSquare size={18} className="text-amber-500" />} 
+                    text="Scroll down and select 'Add to Home Screen'." 
+                  />
+                </ul>
+              ) : (
+                <ul className="space-y-6">
+                  <InstructionStep 
+                    number="1" 
+                    icon={<Smartphone size={18} className="text-primary" />} 
+                    text="Open Anchor in Chrome browser." 
+                  />
+                  <InstructionStep 
+                    number="2" 
+                    icon={<MoreVertical size={18} className="text-muted-foreground" />} 
+                    text="Tap the menu (three dots) in the top right corner." 
+                  />
+                  <InstructionStep 
+                    number="3" 
+                    icon={<PlusSquare size={18} className="text-primary" />} 
+                    text="Select 'Install App' or 'Add to Home Screen'." 
+                  />
+                </ul>
+              )}
+            </div>
+          </div>
+        </section>
+
         {/* Footer */}
         <footer className="mt-40 border-t border-border/50 pt-12 text-center text-sm text-muted-foreground animate-in fade-in duration-1000 delay-[1200ms]">
           <p>© {new Date().getFullYear()} Anchor. Stay grounded.</p>
@@ -118,5 +200,19 @@ function Pillar({ icon, title, description }: { icon: React.ReactNode, title: st
       <h3 className="mb-3 text-xl font-bold tracking-tight">{title}</h3>
       <p className="leading-relaxed text-muted-foreground">{description}</p>
     </div>
+  );
+}
+
+function InstructionStep({ number, icon, text }: { number: string, icon: React.ReactNode, text: string }) {
+  return (
+    <li className="flex items-start gap-4 animate-in fade-in slide-in-from-left-4 duration-500">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+        {number}
+      </div>
+      <div className="flex items-center gap-3 py-1">
+        <span className="shrink-0">{icon}</span>
+        <span className="text-base text-foreground/90 leading-snug">{text}</span>
+      </div>
+    </li>
   );
 }

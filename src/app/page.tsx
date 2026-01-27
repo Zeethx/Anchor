@@ -74,7 +74,7 @@ export default function Home() {
   }
 
   return (
-    <div className="space-y-8 pb-20">
+    <div className="mx-auto max-w-md px-4 pb-24 pt-6 space-y-8 min-h-screen">
       <header className="flex items-center justify-between py-2">
         <div className="flex flex-col">
             <div className="flex items-center gap-2">

@@ -123,7 +123,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="pb-24 space-y-10">
+    <div className="mx-auto max-w-md px-4 pb-24 pt-6 space-y-10 min-h-screen">
       <header className="flex items-center justify-between py-2 border-b pb-4">
         <div>
             <h1 className="text-3xl font-bold tracking-tight text-foreground">Settings</h1>

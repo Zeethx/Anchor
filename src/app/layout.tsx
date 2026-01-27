@@ -37,10 +37,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark h-full"> 
-      <body className={cn(inter.className, "h-full bg-background overscroll-none")}>
+    <html lang="en" className="dark"> 
+      <body className={cn(inter.className, "bg-background antialiased")}>
         <ToastProvider>
-          <main className="mx-auto min-h-screen max-w-md bg-background px-4 pb-24 pt-6">
+          <main>
               {children}
           </main>
           <BottomNav />
