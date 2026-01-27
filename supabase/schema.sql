@@ -11,9 +11,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE public.users (
   id uuid REFERENCES auth.users NOT NULL PRIMARY KEY,
   email text,
-  wake_time time,
   office_days text[], -- e.g. ['Wed', 'Thu']
-  affirmation_style text CHECK (affirmation_style IN ('Discipline', 'Builder', 'Calm')),
   custom_habits jsonb DEFAULT '[{"name": "Gym", "icon": "dumbbell"}, {"name": "Wordle", "icon": "hash"}]'::jsonb,
   custom_affirmations jsonb DEFAULT '["I am disciplined and focused.", "I build quietly and consistently.", "Action over anxiety."]'::jsonb,
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
