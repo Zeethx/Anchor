@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { format, parseISO, differenceInCalendarDays } from "date-fns";
-import { Dumbbell, Brain, Flame, Trophy, Music, Calendar as CalendarIcon, List as ListIcon, ChevronLeft, ChevronRight, X, Check } from "lucide-react";
+import { Dumbbell, Brain, Flame, Trophy, Music, Calendar as CalendarIcon, List as ListIcon, ChevronLeft, ChevronRight, X, Check, Circle, StickyNote, Eye, EyeOff, LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, isToday } from "date-fns";
+import { AVAILABLE_ICONS } from "@/components/ui/icon-picker";
 
 interface LogEntry {
   id?: string;
@@ -14,6 +15,7 @@ interface LogEntry {
   word_of_day: string | null;
   today_goal: string | null;
   song_link?: string | null;
+  note?: string | null;
 }
 
 export default function LogsPage() {
@@ -22,6 +24,10 @@ export default function LogsPage() {
   const [streak, setStreak] = useState(0);
   const [view, setView] = useState<"list" | "calendar">("list");
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [showHabitStreaks, setShowHabitStreaks] = useState(false);
+  const [habitStreaks, setHabitStreaks] = useState<Record<string, number>>({});
+  const [expandedNotes, setExpandedNotes] = useState<Record<string, boolean>>({});
+  const [customHabits, setCustomHabits] = useState<Array<{ name: string; icon: string }>>([]);
 
   const supabase = createClient();
 
@@ -34,16 +40,19 @@ export default function LogsPage() {
         return;
       }
 
-      // Fetch all logs ordered by date DESC
-      const { data } = await supabase
-        .from("daily_logs")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("date", { ascending: false });
+      // Fetch user settings and logs
+      const [settingsRes, logsRes] = await Promise.all([
+        supabase.from("users").select("custom_habits").eq("id", user.id).single(),
+        supabase.from("daily_logs").select("*").eq("user_id", user.id).order("date", { ascending: false })
+      ]);
+      
+      if (settingsRes.data?.custom_habits) {
+        setCustomHabits(settingsRes.data.custom_habits);
+      }
 
-      if (data) {
-        setLogs(data);
-        calculateStreak(data);
+      if (logsRes.data) {
+        setLogs(logsRes.data);
+        calculateStreak(logsRes.data);
       }
       setLoading(false);
     }
@@ -81,7 +90,75 @@ export default function LogsPage() {
         if (gap > 1) break; // Streak broken
     }
     setStreak(currentStreak);
+    calculateHabitStreaks(data);
   }
+
+  function calculateHabitStreaks(data: LogEntry[]) {
+    const streaks: Record<string, number> = {};
+    
+    // Get all unique habit names
+    const allHabits = new Set<string>();
+    data.forEach(log => {
+      log.habits?.forEach(h => allHabits.add(h.name));
+    });
+
+    allHabits.forEach(habitName => {
+      let streak = 0;
+      const today = new Date();
+      
+      // Find the most recent log for this habit
+      let lastCompletedIndex = -1;
+      for (let i = 0; i < data.length; i++) {
+        const habit = data[i].habits?.find(h => h.name === habitName);
+        if (habit?.done) {
+          lastCompletedIndex = i;
+          break;
+        }
+      }
+
+      if (lastCompletedIndex === -1) {
+        streaks[habitName] = 0;
+        return;
+      }
+
+      const lastCompletedDate = parseISO(data[lastCompletedIndex].date);
+      const diff = differenceInCalendarDays(today, lastCompletedDate);
+      
+      // If last completion is more than 1 day ago, streak is broken
+      if (diff > 1) {
+        streaks[habitName] = 0;
+        return;
+      }
+
+      // Count consecutive completed days
+      for (let i = lastCompletedIndex; i < data.length; i++) {
+        const habit = data[i].habits?.find(h => h.name === habitName);
+        const nextHabit = i + 1 < data.length ? data[i + 1].habits?.find(h => h.name === habitName) : null;
+        
+        if (habit?.done) {
+          streak++;
+        } else {
+          break;
+        }
+
+        if (!nextHabit) break;
+
+        const currentDate = parseISO(data[i].date);
+        const nextDate = parseISO(data[i + 1].date);
+        const gap = differenceInCalendarDays(currentDate, nextDate);
+        if (gap > 1) break;
+      }
+
+      streaks[habitName] = streak;
+    });
+
+    setHabitStreaks(streaks);
+  }
+
+  const getIconComponent = (iconName: string): LucideIcon => {
+    const icon = AVAILABLE_ICONS.find(i => i.name === iconName);
+    return icon ? icon.Icon : AVAILABLE_ICONS[0].Icon;
+  };
 
   if (loading) {
     return (
@@ -116,10 +193,14 @@ export default function LogsPage() {
                 </button>
             </div>
             <div className="flex flex-col items-end">
-                <div className="flex items-center gap-1.5 text-orange-500">
+                <button 
+                  onClick={() => setShowHabitStreaks(!showHabitStreaks)}
+                  className="flex items-center gap-1.5 text-orange-500 hover:opacity-80 transition-opacity cursor-pointer"
+                  title="Click to see individual habit streaks"
+                >
                     <Flame size={20} className="fill-current" />
                     <span className="text-2xl font-bold">{streak}</span>
-                </div>
+                </button>
                 <span className="text-xs font-medium text-muted-foreground">Streak</span>
             </div>
         </div>
@@ -149,39 +230,47 @@ export default function LogsPage() {
                               <div className="flex flex-col leading-none">
                                   <span className="text-base font-semibold">{format(parseISO(log.date), "EEEE")}</span>
                                   <span className="text-xs text-muted-foreground">{format(parseISO(log.date), "MMM d")}</span>
+                                  {log.today_goal && (
+                                     <p className="mt-1 text-sm italic text-muted-foreground truncate max-w-[200px] sm:max-w-[400px]">
+                                         {log.today_goal}
+                                     </p>
+                                  )}
                               </div>
                           </div>
                           
                           <div className="flex flex-wrap gap-2 justify-end">
-                              {/* Dynamic habit badges */}
-                              {log.habits?.filter(h => h.done).map((habit, idx) => (
-                                  <div key={idx} className="flex items-center gap-1 rounded-full bg-blue-500/10 px-2 py-1 text-[10px] font-medium text-blue-500">
-                                      <Dumbbell size={10} />
-                                      <span>{habit.name}</span>
-                                  </div>
-                              ))}
-                              {log.word_of_day && (
-                                  <div className="flex items-center gap-1 rounded-full bg-purple-500/10 px-2 py-1 text-[10px] font-medium text-purple-500">
-                                      <Brain size={10} />
-                                      <span className="max-w-[80px] truncate">{log.word_of_day.split('-')[0].trim()}</span>
-                                  </div>
+                              {log.note && (
+                                  <button 
+                                     onClick={() => setExpandedNotes(prev => ({ ...prev, [log.date]: !prev[log.date] }))}
+                                     className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-amber-500/60 hover:text-amber-500 transition-all"
+                                  >
+                                      {expandedNotes[log.date] ? <EyeOff size={12} /> : <Eye size={12} />}
+                                      {expandedNotes[log.date] ? "Hide Note" : "View Note"}
+                                  </button>
                               )}
                           </div>
                       </div>
 
-                      <div className="flex items-center justify-between border-t border-border/50 pt-3">
-                          <div className="flex gap-4 text-sm w-full">
-                               <div className="flex items-center gap-1.5 shrink-0">
-                                  <span className="text-muted-foreground">{log.habits?.filter(h => h.done).length || 0}/{log.habits?.length || 0} habits</span>
-                               </div>
-                               {log.today_goal && (
-                                 <div className="flex items-center gap-1.5 truncate flex-1 justify-end">
-                                    <span className="text-muted-foreground hidden sm:inline text-xs">Goal:</span>
-                                    <span className="text-foreground italic truncate text-xs">"{log.today_goal}"</span>
-                                 </div>
-                               )}
+                      {log.habits?.some(h => h.done) && (
+                          <div className="flex flex-wrap gap-2 pt-1">
+                              {log.habits.filter(h => h.done).map((habit, idx) => {
+                                  const habitConfig = customHabits.find(h => h.name === habit.name);
+                                  const Icon = getIconComponent(habitConfig?.icon || "dumbbell");
+                                  return (
+                                    <div key={idx} className="flex items-center gap-1 rounded-full bg-blue-500/10 px-2 py-1 text-[10px] font-medium text-blue-500">
+                                        <Icon size={10} />
+                                        <span>{habit.name}</span>
+                                    </div>
+                                  );
+                              })}
                           </div>
-                      </div>
+                      )}
+
+                      {log.note && expandedNotes[log.date] && (
+                          <div className="rounded-xl border border-border/50 bg-amber-500/5 p-4 text-sm italic text-muted-foreground leading-relaxed animate-in fade-in slide-in-from-top-2 duration-300">
+                             "{log.note}"
+                          </div>
+                      )}
                       
                       {log.song_link && (
                           <div className="flex items-center gap-2 border-t border-border/50 pt-3">
@@ -195,6 +284,44 @@ export default function LogsPage() {
         </div>
       ) : (
         <CalendarDisplay logs={logs} currentMonth={currentMonth} setCurrentMonth={setCurrentMonth} />
+      )}
+
+      {/* Habit Streaks Modal */}
+      {showHabitStreaks && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl animate-in fade-in slide-in-from-bottom-4">
+            <div className="mb-6 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Flame size={24} className="text-orange-500 fill-current" />
+                <h2 className="text-xl font-bold">Individual Streaks</h2>
+              </div>
+              <button 
+                onClick={() => setShowHabitStreaks(false)}
+                className="rounded-lg p-1 text-muted-foreground hover:bg-muted"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {Object.entries(habitStreaks).length === 0 ? (
+                <p className="text-center text-sm text-muted-foreground py-8">No habit streaks yet</p>
+              ) : (
+                Object.entries(habitStreaks)
+                  .sort((a, b) => b[1] - a[1])
+                  .map(([habitName, streakCount]) => (
+                    <div key={habitName} className="flex items-center justify-between rounded-lg border border-border/50 bg-muted/30 p-3">
+                      <span className="font-medium">{habitName}</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-lg font-bold text-orange-500">{streakCount}</span>
+                        <Flame size={16} className="text-orange-500 fill-current" />
+                      </div>
+                    </div>
+                  ))
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -216,10 +343,10 @@ function CalendarDisplay({ logs, currentMonth, setCurrentMonth }: { logs: LogEnt
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">{format(currentMonth, "MMMM yyyy")}</h2>
         <div className="flex gap-1">
-          <button onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} className="p-2 rounded-md hover:bg-muted transition-colors">
+          <button onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} className="p-2 rounded-md hover:bg-muted transition-colors text-muted-foreground/40 hover:text-foreground">
             <ChevronLeft size={20} />
           </button>
-          <button onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} className="p-2 rounded-md hover:bg-muted transition-colors">
+          <button onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} className="p-2 rounded-md hover:bg-muted transition-colors text-muted-foreground/40 hover:text-foreground">
             <ChevronRight size={20} />
           </button>
         </div>
@@ -286,20 +413,20 @@ function CalendarDisplay({ logs, currentMonth, setCurrentMonth }: { logs: LogEnt
             <div className="flex flex-wrap gap-2">
                {selectedLog.habits?.map((h, i) => (
                  <div key={i} className={cn("flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-medium", h.done ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>
-                    {h.done ? <Check size={12} /> : <div className="w-3 h-3" />}
+                    {h.done ? <Check size={12} /> : <Circle size={12} />}
                     {h.name}
                  </div>
                ))}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {selectedLog.word_of_day && (
-                <div className="rounded-xl bg-card border border-border p-3">
-                  <div className="flex items-center gap-2 mb-1 text-[10px] font-medium text-muted-foreground">
-                    <Brain size={12} />
-                    WORD OF THE DAY
+              {selectedLog.note && (
+                <div className="rounded-xl border border-border bg-amber-500/5 p-4">
+                  <div className="flex items-center gap-2 mb-2 text-[10px] font-bold uppercase tracking-widest text-amber-600">
+                    <StickyNote size={14} />
+                    Reflections
                   </div>
-                  <div className="text-sm font-semibold">{selectedLog.word_of_day}</div>
+                  <div className="text-sm italic leading-relaxed text-foreground whitespace-pre-wrap">"{selectedLog.note}"</div>
                 </div>
               )}
               {selectedLog.song_link && (

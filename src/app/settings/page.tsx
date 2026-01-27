@@ -17,8 +17,6 @@ export default function SettingsPage() {
   const [email, setEmail] = useState("");
   const [habits, setHabits] = useState<Array<{ name: string; icon: string }>>([]);
   const [affirmations, setAffirmations] = useState<string[]>([]);
-  const [initialData, setInitialData] = useState<{ habits: any[], affirmations: string[] }>({ habits: [], affirmations: [] });
-  const [isDirty, setIsDirty] = useState(false);
   
   const [newHabitName, setNewHabitName] = useState("");
   const [newHabitIcon, setNewHabitIcon] = useState("dumbbell");
@@ -46,11 +44,8 @@ export default function SettingsPage() {
         .single();
         
       if (data) {
-        const h = data.custom_habits || [];
-        const a = data.custom_affirmations || [];
-        setHabits(h);
-        setAffirmations(a);
-        setInitialData({ habits: h, affirmations: a });
+        setHabits(data.custom_habits || []);
+        setAffirmations(data.custom_affirmations || []);
       }
       
       setLoading(false);
@@ -58,98 +53,60 @@ export default function SettingsPage() {
     loadSettings();
   }, [supabase, router]);
 
-  // Track dirty state
-  useEffect(() => {
-    const habitsChanged = JSON.stringify(habits) !== JSON.stringify(initialData.habits);
-    const affirmationsChanged = JSON.stringify(affirmations) !== JSON.stringify(initialData.affirmations);
-    setIsDirty(habitsChanged || affirmationsChanged);
-  }, [habits, affirmations, initialData]);
-
-  // Unsaved changes warning
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (isDirty) {
-        e.preventDefault();
-        e.returnValue = "";
-      }
-    };
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [isDirty]);
-
-  const handleSave = async () => {
-    setSaving(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (user) {
-        try {
-          // First try to update
-          const { error: updateError, data: updateData } = await supabase
-            .from("users")
-            .update({
-              custom_habits: habits,
-              custom_affirmations: affirmations
-            })
-            .eq("id", user.id)
-            .select();
-          
-          // If no rows were updated, it means the user doesn't exist yet, so insert
-          if (updateError) {
-            throw updateError;
-          }
-          
-          if (!updateData || updateData.length === 0) {
-            const { error: insertError } = await supabase
-              .from("users")
-              .insert({
-                id: user.id,
-                email: user.email,
-                custom_habits: habits,
-                custom_affirmations: affirmations
-              });
-            
-            if (insertError) throw insertError;
-          }
-          
-          
-          setInitialData({ habits, affirmations });
-          setIsDirty(false);
-          toast("Settings saved successfully", "success");
-        } catch (error) {
-          console.error("Save error:", error);
-          toast(error instanceof Error ? error.message : "Unknown error", "error");
-        }
-    }
-    setSaving(false);
-  };
-
   const handleSignOut = async () => {
-    if (isDirty && !confirm("You have unsaved changes. Are you sure you want to sign out?")) {
-        return;
-    }
     await supabase.auth.signOut();
     router.push("/auth");
   };
 
-  const addHabit = () => {
+  const addHabit = async () => {
     if (!newHabitName.trim()) return;
-    setHabits([...habits, { name: newHabitName.trim(), icon: newHabitIcon }]);
+    const updated = [...habits, { name: newHabitName.trim(), icon: newHabitIcon }];
+    setHabits(updated);
     setNewHabitName("");
     setNewHabitIcon("dumbbell");
+    
+    // Auto-save
+    await syncSettings(updated, affirmations);
   };
 
-  const removeHabit = (index: number) => {
-    setHabits(habits.filter((_, i) => i !== index));
+  const removeHabit = async (index: number) => {
+    const updated = habits.filter((_, i) => i !== index);
+    setHabits(updated);
+    await syncSettings(updated, affirmations);
   };
 
-  const addAffirmation = () => {
+  const addAffirmation = async () => {
     if (!newAffirmation.trim()) return;
-    setAffirmations([...affirmations, newAffirmation.trim()]);
+    const updated = [...affirmations, newAffirmation.trim()];
+    setAffirmations(updated);
     setNewAffirmation("");
+    await syncSettings(habits, updated);
   };
 
-  const removeAffirmation = (index: number) => {
-    setAffirmations(affirmations.filter((_, i) => i !== index));
+  const removeAffirmation = async (index: number) => {
+    const updated = affirmations.filter((_, i) => i !== index);
+    setAffirmations(updated);
+    await syncSettings(habits, updated);
+  };
+
+  const syncSettings = async (h: any[], a: string[]) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+        setSaving(true);
+        try {
+          await supabase
+            .from("users")
+            .upsert({
+              id: user.id,
+              email: user.email,
+              custom_habits: h,
+              custom_affirmations: a
+            });
+        } catch (error) {
+          console.error("Auto-save error:", error);
+        }
+        setSaving(false);
+    }
   };
 
   const getIcon = (name: string) => {
@@ -167,9 +124,26 @@ export default function SettingsPage() {
 
   return (
     <div className="pb-24 space-y-10">
-      <header className="py-2">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">Settings</h1>
-        <p className="text-muted-foreground">{email}</p>
+      <header className="flex items-center justify-between py-2 border-b pb-4">
+        <div>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">Settings</h1>
+            <p className="text-muted-foreground">{email}</p>
+        </div>
+        <div className="flex items-center gap-3">
+            {saving && (
+                <div className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-muted-foreground animate-pulse">
+                    <Save size={12} className="animate-spin" />
+                    Saving...
+                </div>
+            )}
+            <button 
+                onClick={handleSignOut}
+                className="flex items-center gap-1.5 rounded-lg bg-destructive/10 px-3 py-1.5 text-xs font-bold text-destructive transition-all hover:bg-destructive/20 active:scale-95"
+            >
+                <LogOut size={14} />
+                Sign Out
+            </button>
+        </div>
       </header>
       
       <div className="space-y-10">
@@ -250,24 +224,9 @@ export default function SettingsPage() {
           </div>
         </section>
 
-        <div className="flex flex-col gap-4 pt-6">
-          <button 
-              onClick={handleSave}
-              disabled={saving}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 font-bold text-primary-foreground transition-all hover:opacity-90 active:scale-95 disabled:opacity-50 shadow-lg shadow-primary/20"
-          >
-              <Save size={20} />
-              {saving ? "Saving..." : "Save All Changes"}
-          </button>
-          
-          <button 
-              onClick={handleSignOut}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-destructive/30 py-4 font-medium text-destructive transition-all hover:bg-destructive/10 active:scale-95"
-          >
-              <LogOut size={18} />
-              Sign Out
-          </button>
-        </div>
+         <div className="pt-6 text-center">
+            <p className="text-xs text-muted-foreground">Your changes are automatically saved.</p>
+         </div>
       </div>
 
       {showIconPicker && (

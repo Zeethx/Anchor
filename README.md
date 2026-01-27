@@ -18,7 +18,7 @@ Anchor is a minimalist life-tracking PWA designed to help you build rituals, not
 *   **Trophy Milestones 🏆**: Days where you complete all your habits are marked with a trophy on the calendar.
 *   **Detailed Deep-Dives**: Click any date to see exactly what your goal, word, song, and habits were for that day.
 
-### 🌓 Evening Reflections
+### 🌓 Today's Reflections
 *   **Word of the Day**: Expand your vocabulary with definitions fetched directly via API.
 *   **Daily Soundtrack**: Search and link the song that defined your day.
 

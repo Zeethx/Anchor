@@ -127,24 +127,24 @@ export function SongLink({ value, onChange, disabled, className }: SongLinkProps
 
       {selectedTrack ? (
         // Selected Track Card
-        <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-3">
+        <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-2.5">
           {selectedTrack.image && (
             <img
               src={selectedTrack.image}
               alt={selectedTrack.name}
-              className="h-12 w-12 rounded-lg object-cover"
+              className="h-10 w-10 rounded-lg object-cover"
             />
           )}
           <div className="flex-1 min-w-0">
-            <div className="truncate font-medium text-foreground">{selectedTrack.name}</div>
-            <div className="truncate text-sm text-muted-foreground">{selectedTrack.artist}</div>
+            <div className="truncate text-sm text-foreground">{selectedTrack.name}</div>
+            <div className="truncate text-[11px] text-muted-foreground/60">{selectedTrack.artist}</div>
           </div>
           {!disabled && (
             <button
               onClick={handleClearSelection}
-              className="shrink-0 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="shrink-0 rounded-lg p-1 text-muted-foreground/40 transition-colors hover:bg-muted hover:text-foreground"
             >
-              <X size={16} />
+              <X size={14} />
             </button>
           )}
         </div>
@@ -152,18 +152,18 @@ export function SongLink({ value, onChange, disabled, className }: SongLinkProps
         // Search Input
         <div className="relative">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/40" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={disabled ? "Song selection disabled" : "Search for a song..."}
+              placeholder={disabled ? "Song selection disabled" : "A song that stayed with you."}
               disabled={disabled}
-              className="flex h-12 w-full rounded-xl border border-input bg-card pl-10 pr-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex h-11 w-full rounded-xl border border-input bg-card pl-10 pr-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground/40 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
             />
             {loading && (
               <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                <div className="h-4 w-4 animate-spin rounded-full border-1 border-primary border-t-transparent" />
               </div>
             )}
           </div>
