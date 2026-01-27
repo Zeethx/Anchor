@@ -11,7 +11,7 @@ export function LandingPage() {
   return (
     <div className="relative bg-background text-foreground selection:bg-primary/20">
       {/* Meditative Background Elements */}
-      <div className="absolute inset-0 pointer-events-none">
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute -left-[10%] -top-[10%] h-[40%] w-[40%] rounded-full bg-primary/5 blur-[120px] animate-pulse" />
         <div className="absolute -right-[10%] -bottom-[10%] h-[40%] w-[40%] rounded-full bg-blue-500/5 blur-[120px] animate-pulse shadow-2xl" />
       </div>
