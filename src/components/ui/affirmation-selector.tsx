@@ -57,11 +57,17 @@ export function AffirmationSelector({
                 onMouseDown={() => startPress(affirmation)}
                 onMouseUp={endPress}
                 onMouseLeave={endPress}
-                onTouchStart={() => startPress(affirmation)}
-                onTouchEnd={endPress}
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                  startPress(affirmation);
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  endPress();
+                }}
                 disabled={isAcknowledged}
                 className={cn(
-                  "w-full rounded-2xl border p-5 text-left transition-all duration-300 select-none touch-none",
+                  "w-full rounded-2xl border p-5 text-left transition-all duration-300 select-none",
                   isAcknowledged
                     ? "border-border bg-muted/30 opacity-60 scale-[0.98]"
                     : "border-border bg-card hover:border-border/80 active:scale-[0.99]",

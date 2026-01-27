@@ -7,6 +7,7 @@ import { useState, useEffect, useRef } from "react";
 interface SongLinkProps {
   value: string;
   onChange: (value: string) => void;
+  disabled?: boolean;
   className?: string;
 }
 
@@ -17,7 +18,7 @@ interface Track {
   url?: string;
 }
 
-export function SongLink({ value, onChange, className }: SongLinkProps) {
+export function SongLink({ value, onChange, disabled, className }: SongLinkProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(false);
@@ -138,12 +139,14 @@ export function SongLink({ value, onChange, className }: SongLinkProps) {
             <div className="truncate font-medium text-foreground">{selectedTrack.name}</div>
             <div className="truncate text-sm text-muted-foreground">{selectedTrack.artist}</div>
           </div>
-          <button
-            onClick={handleClearSelection}
-            className="shrink-0 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          >
-            <X size={16} />
-          </button>
+          {!disabled && (
+            <button
+              onClick={handleClearSelection}
+              className="shrink-0 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <X size={16} />
+            </button>
+          )}
         </div>
       ) : (
         // Search Input
@@ -154,8 +157,9 @@ export function SongLink({ value, onChange, className }: SongLinkProps) {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search for a song..."
-              className="flex h-12 w-full rounded-xl border border-input bg-card pl-10 pr-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              placeholder={disabled ? "Song selection disabled" : "Search for a song..."}
+              disabled={disabled}
+              className="flex h-12 w-full rounded-xl border border-input bg-card pl-10 pr-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             />
             {loading && (
               <div className="absolute right-3 top-1/2 -translate-y-1/2">

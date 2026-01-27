@@ -9,6 +9,7 @@ import {
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { IconPicker, AVAILABLE_ICONS } from "@/components/ui/icon-picker";
+import { useToast } from "@/components/ui/toast";
 
 export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
@@ -16,6 +17,8 @@ export default function SettingsPage() {
   const [email, setEmail] = useState("");
   const [habits, setHabits] = useState<Array<{ name: string; icon: string }>>([]);
   const [affirmations, setAffirmations] = useState<string[]>([]);
+  const [initialData, setInitialData] = useState<{ habits: any[], affirmations: string[] }>({ habits: [], affirmations: [] });
+  const [isDirty, setIsDirty] = useState(false);
   
   const [newHabitName, setNewHabitName] = useState("");
   const [newHabitIcon, setNewHabitIcon] = useState("dumbbell");
@@ -24,6 +27,7 @@ export default function SettingsPage() {
 
   const router = useRouter();
   const supabase = createClient();
+  const { toast } = useToast();
 
   useEffect(() => {
     async function loadSettings() {
@@ -42,8 +46,11 @@ export default function SettingsPage() {
         .single();
         
       if (data) {
-        if (data.custom_habits) setHabits(data.custom_habits);
-        if (data.custom_affirmations) setAffirmations(data.custom_affirmations);
+        const h = data.custom_habits || [];
+        const a = data.custom_affirmations || [];
+        setHabits(h);
+        setAffirmations(a);
+        setInitialData({ habits: h, affirmations: a });
       }
       
       setLoading(false);
@@ -51,29 +58,75 @@ export default function SettingsPage() {
     loadSettings();
   }, [supabase, router]);
 
+  // Track dirty state
+  useEffect(() => {
+    const habitsChanged = JSON.stringify(habits) !== JSON.stringify(initialData.habits);
+    const affirmationsChanged = JSON.stringify(affirmations) !== JSON.stringify(initialData.affirmations);
+    setIsDirty(habitsChanged || affirmationsChanged);
+  }, [habits, affirmations, initialData]);
+
+  // Unsaved changes warning
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty]);
+
   const handleSave = async () => {
     setSaving(true);
     const { data: { user } } = await supabase.auth.getUser();
     
     if (user) {
-        const { error } = await supabase.from("users").upsert({
-            id: user.id,
-            email: user.email,
-            custom_habits: habits,
-            custom_affirmations: affirmations
-        });
-        
-        if (error) {
-          console.error(error);
-          alert("Error saving settings");
-        } else {
-          alert("Settings saved successfully");
+        try {
+          // First try to update
+          const { error: updateError, data: updateData } = await supabase
+            .from("users")
+            .update({
+              custom_habits: habits,
+              custom_affirmations: affirmations
+            })
+            .eq("id", user.id)
+            .select();
+          
+          // If no rows were updated, it means the user doesn't exist yet, so insert
+          if (updateError) {
+            throw updateError;
+          }
+          
+          if (!updateData || updateData.length === 0) {
+            const { error: insertError } = await supabase
+              .from("users")
+              .insert({
+                id: user.id,
+                email: user.email,
+                custom_habits: habits,
+                custom_affirmations: affirmations
+              });
+            
+            if (insertError) throw insertError;
+          }
+          
+          
+          setInitialData({ habits, affirmations });
+          setIsDirty(false);
+          toast("Settings saved successfully", "success");
+        } catch (error) {
+          console.error("Save error:", error);
+          toast(error instanceof Error ? error.message : "Unknown error", "error");
         }
     }
     setSaving(false);
   };
 
   const handleSignOut = async () => {
+    if (isDirty && !confirm("You have unsaved changes. Are you sure you want to sign out?")) {
+        return;
+    }
     await supabase.auth.signOut();
     router.push("/auth");
   };

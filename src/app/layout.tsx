@@ -3,16 +3,17 @@ import { Inter } from "next/font/google"; // Inter is fine
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { BottomNav } from "@/components/layout/bottom-nav";
+import { ToastProvider } from "@/components/ui/toast";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Anchor",
-  description: "Daily Operating System",
+  description: "A quiet daily operating system for consistency.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
+    statusBarStyle: "default",
     title: "Anchor",
   },
   icons: {
@@ -20,6 +21,7 @@ export const metadata: Metadata = {
     apple: "/logo.png",
   },
 };
+
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -37,10 +39,12 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark h-full"> 
       <body className={cn(inter.className, "h-full bg-background overscroll-none")}>
-        <main className="mx-auto min-h-screen max-w-md bg-background px-4 pb-24 pt-6">
-            {children}
-        </main>
-        <BottomNav />
+        <ToastProvider>
+          <main className="mx-auto min-h-screen max-w-md bg-background px-4 pb-24 pt-6">
+              {children}
+          </main>
+          <BottomNav />
+        </ToastProvider>
       </body>
     </html>
   );
