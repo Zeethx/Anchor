@@ -89,7 +89,7 @@ export function AffirmationSelector({
                     </p>
                     {isAcknowledged && (
                       <p className="text-[10px] font-medium uppercase tracking-wider text-primary/60 animate-in fade-in slide-in-from-left-2 duration-700">
-                        Carried for today
+                        <span className="text-blue-500">Acknowledged</span>
                       </p>
                     )}
                   </div>

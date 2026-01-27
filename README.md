@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ⚓ Anchor
 
-## Getting Started
+**A quiet daily operating system for grounded consistency.**
 
-First, run the development server:
+Anchor is a minimalist life-tracking PWA designed to help you build rituals, not just checklists. It focuses on intentional acknowledgement over mindless task completion, providing a calm space to anchor your day.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## ✨ Key Features
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 🧘‍♂️ Morning Ritual
+*   **Today's Anchor**: Set one primary focus for your day.
+*   **Hold to Internalize**: Ritualistic affirmations that require a **0.5s hold** to acknowledge. Designed to prevent mindless tapping and encourage true presence.
+*   **One-Way Acknowledgement**: Once an affirmation is "carried for the day," it remains part of your grounded state.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 📅 Visual History
+*   **Calendar & List Views**: Toggle between a clean list or a visual monthly grid.
+*   **Trophy Milestones 🏆**: Days where you complete all your habits are marked with a trophy on the calendar.
+*   **Detailed Deep-Dives**: Click any date to see exactly what your goal, word, song, and habits were for that day.
 
-## Learn More
+### 🌓 Evening Reflections
+*   **Word of the Day**: Expand your vocabulary with definitions fetched directly via API.
+*   **Daily Soundtrack**: Search and link the song that defined your day.
 
-To learn more about Next.js, take a look at the following resources:
+### ⚙️ Full Customization
+*   **Ritual Settings**: Manage your personal list of habits and affirmations in a dedicated settings space, keeping the home screen pure and distraction-free.
+*   **Mobile First**: Built as a Progressive Web App (PWA) for a native app feel on your phone.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🛠 Tech Stack
 
-## Deploy on Vercel
+*   **Framework**: [Next.js 15](https://nextjs.org/) (App Router)
+*   **Database & Auth**: [Supabase](https://supabase.com/)
+*   **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+*   **Icons**: [Lucide React](https://lucide.dev/)
+*   **Date Handling**: [date-fns](https://date-fns.org/)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📱 Mobile Installation
+
+Anchor is best experienced as a native app on your home screen:
+
+*   **iOS (Safari)**: Tap **Share** ➔ **Add to Home Screen**.
+*   **Android (Chrome)**: Tap **Three Dots** ➔ **Install App**.
+
+---
+
+*Built with intention to keep you anchored.*

@@ -15,6 +15,10 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "Anchor",
   },
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export const viewport: Viewport = {

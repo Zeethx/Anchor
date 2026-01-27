@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { LogIn, Plus, X, Edit2 } from "lucide-react";
+import { LogIn } from "lucide-react";
 import { HabitToggle } from "@/components/ui/habit-toggle";
 import { AffirmationSelector } from "@/components/ui/affirmation-selector";
 import { useDailyLog } from "@/hooks/use-daily-log";
@@ -10,9 +10,8 @@ import { UserAvatar } from "@/components/ui/user-avatar";
 import { WordOfDay } from "@/components/ui/word-of-day";
 import { SongLink } from "@/components/ui/song-link";
 import { createClient } from "@/lib/supabase/client";
-import { IconPicker, AVAILABLE_ICONS } from "@/components/ui/icon-picker";
+import { AVAILABLE_ICONS } from "@/components/ui/icon-picker";
 
-import { HabitEditor } from "@/components/ui/habit-editor";
 
 export default function Home() {
   const { log, updateLog, loading, user, customHabits } = useDailyLog();
