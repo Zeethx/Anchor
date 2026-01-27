@@ -1,0 +1,122 @@
+"use client";
+
+import { Anchor, ArrowRight, Zap, Target, Music, StickyNote, Flame } from "lucide-react";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
+
+export function LandingPage() {
+  return (
+    <div className="relative min-h-screen overflow-hidden bg-background text-foreground selection:bg-primary/20">
+      {/* Meditative Background Elements */}
+      <div className="absolute inset-0 z-0">
+        <div className="absolute -left-[10%] -top-[10%] h-[40%] w-[40%] rounded-full bg-primary/5 blur-[120px] animate-pulse" />
+        <div className="absolute -right-[10%] -bottom-[10%] h-[40%] w-[40%] rounded-full bg-blue-500/5 blur-[120px] animate-pulse shadow-2xl" />
+      </div>
+
+      <div className="relative z-10 mx-auto max-w-5xl px-6 py-24 sm:py-32">
+        {/* Navigation / Logo */}
+        <nav className="mb-24 flex items-center justify-between animate-in fade-in slide-in-from-top-4 duration-1000">
+          <div className="flex items-center gap-2">
+            <div className="flex h-10 w-10 overflow-hidden items-center justify-center rounded-xl text-primary-foreground shadow-lg shadow-primary/20 border border-primary/70">
+              <img src="/logo.png" alt="Anchor Logo" className="h-full w-full object-cover animate-in zoom-in duration-700 delay-300" />
+            </div>
+            <span className="text-xl font-bold tracking-tight">Anchor</span>
+          </div>
+          <Link 
+            href="/auth" 
+            className="group flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-5 py-2 text-sm font-medium transition-all hover:bg-primary hover:text-white"
+          >
+            Enter Anchor
+            <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+          </Link>
+        </nav>
+
+        {/* Hero Section */}
+        <section className="mb-32 text-center">
+          <h1 className="mb-6 text-5xl font-bold tracking-tight sm:text-7xl animate-in fade-in slide-in-from-bottom-8 duration-1000">
+            Stay Grounded. <br />
+            <span className="bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">
+              Build Quietly.
+            </span>
+          </h1>
+          <p className="mx-auto mb-10 max-w-2xl text-xl text-muted-foreground animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
+            A ritualistic space for daily reflection, habit tracking, and deep recall. 
+            No noise. Just your progress, anchored.
+          </p>
+          <div className="animate-in fade-in zoom-in duration-1000 delay-500">
+            <Link 
+              href="/auth" 
+              className="inline-flex h-14 items-center justify-center rounded-2xl bg-primary px-10 text-lg font-semibold text-primary-foreground shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95"
+            >
+              Start Your Ritual
+            </Link>
+          </div>
+        </section>
+
+        {/* Pillars / Features */}
+        <section className="grid gap-6 sm:grid-cols-3 animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-700">
+          <Pillar 
+            icon={<Zap className="text-amber-500" />} 
+            title="Ritual" 
+            description="Build consistent habits with a low-pressure, calming interface."
+          />
+          <Pillar 
+            icon={<StickyNote className="text-blue-500" />} 
+            title="Reflection" 
+            description="Capture your day with guided notes and intentional word choices."
+          />
+          <Pillar 
+            icon={<Flame className="text-orange-500" />} 
+            title="Recall" 
+            description="Navigate your history through a beautiful, island-style log view."
+          />
+        </section>
+
+        {/* Feature Tease (Glassmorphism) */}
+        <div className="mt-32 rounded-[2.5rem] border border-primary/10 bg-gradient-to-br from-primary/5 to-transparent p-8 sm:p-12 animate-in fade-in duration-1000 delay-1000">
+          <div className="grid gap-12 sm:grid-cols-2 items-center">
+             <div>
+                <h2 className="mb-4 text-3xl font-bold tracking-tight">The Art of Consistency</h2>
+                <p className="text-lg text-muted-foreground">
+                  Anchor isn't just a tracker. It's a meditative experience. From your "Anchor for Today" to the song that stayed with you, every detail is designed for recall.
+                </p>
+             </div>
+             <div className="relative">
+                {/* Mockup / Abstract visual representing the Log UI */}
+                <div className="rounded-2xl border border-white/20 bg-background/50 p-6 backdrop-blur-xl shadow-2xl skew-y-3 rotate-3 transition-transform hover:skew-y-0 hover:rotate-0 duration-700">
+                  <div className="mb-4 h-2 w-12 rounded-full bg-primary/20" />
+                  <div className="mb-2 h-4 w-3/4 rounded-full bg-foreground/10" />
+                  <div className="mb-6 h-4 w-1/2 rounded-full bg-foreground/5" />
+                  <div className="flex gap-2">
+                    <div className="h-6 w-16 rounded-full bg-blue-500/10" />
+                    <div className="h-6 w-20 rounded-full bg-primary/10" />
+                  </div>
+                </div>
+                <div className="absolute -bottom-6 -left-6 rounded-2xl border border-white/20 bg-background/80 p-6 backdrop-blur-xl shadow-2xl -skew-y-6 -rotate-6 transition-transform hover:skew-y-0 hover:rotate-0 duration-1000">
+                   <Music className="mb-2 text-primary" size={20} />
+                   <div className="h-3 w-32 rounded-full bg-foreground/10" />
+                </div>
+             </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <footer className="mt-40 border-t border-border/50 pt-12 text-center text-sm text-muted-foreground animate-in fade-in duration-1000 delay-[1200ms]">
+          <p>© {new Date().getFullYear()} Anchor. Stay grounded.</p>
+        </footer>
+      </div>
+    </div>
+  );
+}
+
+function Pillar({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) {
+  return (
+    <div className="group rounded-3xl border border-border bg-card p-8 transition-all hover:border-primary/50 hover:bg-muted/50 hover:shadow-2xl hover:shadow-primary/5">
+      <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-background shadow-sm transition-transform group-hover:scale-110">
+        {icon}
+      </div>
+      <h3 className="mb-3 text-xl font-bold tracking-tight">{title}</h3>
+      <p className="leading-relaxed text-muted-foreground">{description}</p>
+    </div>
+  );
+}

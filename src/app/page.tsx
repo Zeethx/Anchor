@@ -12,6 +12,7 @@ import { WordOfDay } from "@/components/ui/word-of-day";
 import { SongLink } from "@/components/ui/song-link";
 import { AVAILABLE_ICONS } from "@/components/ui/icon-picker";
 import { cn } from "@/lib/utils";
+import { LandingPage } from "@/components/ui/landing-page";
 import { useToast } from "@/components/ui/toast";
 
 export default function Home() {
@@ -66,6 +67,10 @@ export default function Home() {
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
         </div>
     );
+  }
+
+  if (!user) {
+    return <LandingPage />;
   }
 
   return (
