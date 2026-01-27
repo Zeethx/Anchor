@@ -16,9 +16,9 @@ export function LandingPage() {
         <div className="absolute -right-[10%] -bottom-[10%] h-[40%] w-[40%] rounded-full bg-blue-500/5 blur-[120px] animate-pulse shadow-2xl" />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-5xl px-6 py-24 sm:py-32">
+      <div className="relative z-10 mx-auto max-w-5xl px-6 py-8 sm:py-12">
         {/* Navigation / Logo */}
-        <nav className="mb-24 flex items-center justify-between animate-in fade-in slide-in-from-top-4 duration-1000">
+        <nav className="mb-12 flex items-center justify-between animate-in fade-in slide-in-from-top-4 duration-1000">
           <div className="flex items-center gap-2">
             <div className="flex h-10 w-10 overflow-hidden items-center justify-center rounded-xl text-primary-foreground shadow-lg shadow-primary/20 border border-primary/70">
               <img src="/logo.png" alt="Anchor Logo" className="h-full w-full object-cover animate-in zoom-in duration-700 delay-300" />

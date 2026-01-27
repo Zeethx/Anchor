@@ -23,8 +23,8 @@ export function BottomNav() {
     { label: "Logs", icon: Calendar, href: "/logs" },
   ];
 
-  // Don't show on Auth page
-  if (pathname.startsWith("/auth")) return null;
+  // Don't show on Auth page or if not logged in (Landing page)
+  if (pathname.startsWith("/auth") || !user) return null;
 
   const isSettingsActive = pathname === "/settings";
 

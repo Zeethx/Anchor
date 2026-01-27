@@ -169,8 +169,8 @@ export default function LogsPage() {
   }
 
   return (
-    <div className="pb-20">
-      <header className="mb-6 flex items-center justify-between py-2">
+    <div className="mx-auto max-w-md px-4 pb-40 pt-6 space-y-10 min-h-screen">
+      <header className="flex items-center justify-between py-2 border-b pb-4">
         <div>
             <h1 className="text-3xl font-bold tracking-tight text-foreground">Logs</h1>
             <p className="text-muted-foreground">Your history</p>
@@ -207,7 +207,7 @@ export default function LogsPage() {
       </header>
       
       {view === "list" ? (
-        <div className="space-y-3">
+        <div className="space-y-6">
           {logs.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
                   <div className="mb-4 rounded-full bg-muted p-4">

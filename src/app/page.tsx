@@ -74,7 +74,7 @@ export default function Home() {
   }
 
   return (
-    <div className="mx-auto max-w-md px-4 pb-24 pt-6 space-y-8 min-h-screen">
+    <div className="mx-auto max-w-md px-4 pb-40 pt-6 space-y-8 min-h-screen">
       <header className="flex items-center justify-between py-2">
         <div className="flex flex-col">
             <div className="flex items-center gap-2">
@@ -230,7 +230,7 @@ export default function Home() {
                                 onBlur={() => !log.note && setIsEditingNote(false)}
                                 onChange={(e) => updateLog({ note: e.target.value })}
                                 placeholder="A few honest lines."
-                                className="min-h-[160px] w-full resize-none rounded-2xl border border-input bg-card p-5 text-base leading-relaxed ring-offset-background placeholder:text-muted-foreground/40 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/20 transition-all font-normal"
+                                className="min-h-[160px] w-full resize-none rounded-xl border border-input bg-card p-4 text-base leading-relaxed ring-offset-background placeholder:text-muted-foreground/40 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/20 transition-all font-normal"
                             />
                             {log.note && (
                                 <button 
@@ -246,7 +246,7 @@ export default function Home() {
                             )}
                         </div>
                      ) : (
-                         <div className="w-full whitespace-pre-wrap rounded-2xl border border-border bg-card/50 p-5 text-base leading-relaxed text-muted-foreground font-normal">
+                         <div className="w-full whitespace-pre-wrap rounded-xl border border-border bg-card p-4 text-base leading-relaxed text-foreground font-medium">
                              {log.note}
                          </div>
                      )}

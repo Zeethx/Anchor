@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { 
   LogOut, Save, Plus, X, Dumbbell, Brain, Flame, Trophy, 
-  Target, Music as MusicIcon, Check
+  Target, Music as MusicIcon, Check, ChevronUp, ChevronDown
 } from "lucide-react";
+
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { IconPicker, AVAILABLE_ICONS } from "@/components/ui/icon-picker";
@@ -75,6 +76,19 @@ export default function SettingsPage() {
     await syncSettings(updated, affirmations);
   };
 
+  const moveHabit = async (index: number, direction: 'up' | 'down') => {
+    const updated = [...habits];
+    if (direction === 'up' && index > 0) {
+      [updated[index], updated[index - 1]] = [updated[index - 1], updated[index]];
+    } else if (direction === 'down' && index < updated.length - 1) {
+      [updated[index], updated[index + 1]] = [updated[index + 1], updated[index]];
+    } else {
+      return;
+    }
+    setHabits(updated);
+    await syncSettings(updated, affirmations);
+  };
+
   const addAffirmation = async () => {
     if (!newAffirmation.trim()) return;
     const updated = [...affirmations, newAffirmation.trim()];
@@ -123,7 +137,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-md px-4 pb-24 pt-6 space-y-10 min-h-screen">
+    <div className="mx-auto max-w-md px-4 pb-40 pt-6 space-y-10 min-h-screen">
       <header className="flex items-center justify-between py-2 border-b pb-4">
         <div>
             <h1 className="text-3xl font-bold tracking-tight text-foreground">Settings</h1>
@@ -161,9 +175,28 @@ export default function SettingsPage() {
                       </div>
                       <span className="font-medium">{habit.name}</span>
                     </div>
-                    <button onClick={() => removeHabit(i)} className="rounded-full p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors">
-                      <X size={16} />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button 
+                        onClick={() => moveHabit(i, 'up')}
+                        disabled={i === 0}
+                        className="rounded-full p-2 text-muted-foreground hover:bg-muted disabled:opacity-20 transition-all active:scale-90"
+                      >
+                        <ChevronUp size={16} />
+                      </button>
+                      <button 
+                        onClick={() => moveHabit(i, 'down')}
+                        disabled={i === habits.length - 1}
+                        className="rounded-full p-2 text-muted-foreground hover:bg-muted disabled:opacity-20 transition-all active:scale-90"
+                      >
+                        <ChevronDown size={16} />
+                      </button>
+                      <button 
+                        onClick={() => removeHabit(i)} 
+                        className="rounded-full p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors active:scale-90"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
                   </div>
                 );
               })}
