@@ -31,6 +31,8 @@ export const viewport: Viewport = {
   themeColor: "black",
 };
 
+import { UserProvider } from "@/components/providers/user-provider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -39,13 +41,16 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark"> 
       <body className={cn(inter.className, "bg-background antialiased")}>
-        <ToastProvider>
-          <main>
-              {children}
-          </main>
-          <BottomNav />
-        </ToastProvider>
+        <UserProvider>
+          <ToastProvider>
+            <main>
+                {children}
+            </main>
+            <BottomNav />
+          </ToastProvider>
+        </UserProvider>
       </body>
     </html>
   );
 }
+

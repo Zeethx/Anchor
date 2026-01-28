@@ -1,10 +1,10 @@
 {
-  "name": "Anchor - Daily OS",
+  "name": "Anchor",
   "short_name": "Anchor",
   "description": "A quiet daily operating system for consistency.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "background_color": "#0a0a0a",
   "theme_color": "#000000",
   "icons": [
     {

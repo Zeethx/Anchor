@@ -28,10 +28,12 @@ const DEFAULT_LOG: DailyLog = {
   song_link: null,
 };
 
+import { useUser } from "@/components/providers/user-provider";
+
 export function useDailyLog(selectedDate: string) {
   const [log, setLog] = useState<DailyLog>(DEFAULT_LOG);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<User | null>(null);
+  const { user, supabase, loading: authLoading } = useUser();
   const [customHabits, setCustomHabits] = useState<Array<{ name: string; icon: string }>>([]);
   const [customAffirmations, setCustomAffirmations] = useState<string[]>([]);
   const [loggedDates, setLoggedDates] = useState<Set<string>>(new Set());
@@ -40,30 +42,26 @@ export function useDailyLog(selectedDate: string) {
   // Debounce ref
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Initialize client once
-  const [supabase] = useState(() => createClient());
-
-  // 1. Check Auth & Load Initial Data
+  // 1. Load Initial Data when user is available
   useEffect(() => {
     let channel: any = null;
 
     async function init() {
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      if (authLoading) return;
       if (!user) {
         setLoading(false);
         return;
       }
       
-      setUser(user);
       setLoading(true);
 
       // Fetch user config, the specific log, AND all dates with logs
       const [userRes, logRes, allLogsRes] = await Promise.all([
-        supabase.from("users").select("custom_habits, custom_affirmations").eq("id", user.id).single(),
+        supabase.from("users").select("custom_habits, custom_affirmations").eq("id", user.id).maybeSingle(),
         supabase.from("daily_logs").select("*").eq("user_id", user.id).eq("date", selectedDate).maybeSingle(),
         supabase.from("daily_logs").select("date").eq("user_id", user.id)
       ]);
+
 
       if (userRes.data?.custom_habits) {
         setCustomHabits(userRes.data.custom_habits);
@@ -137,7 +135,8 @@ export function useDailyLog(selectedDate: string) {
     return () => {
       if (channel) channel.unsubscribe();
     };
-  }, [supabase, selectedDate]);
+  }, [supabase, selectedDate, user, authLoading]);
+
 
   // 2. Sync changes to Supabase (Debounced)
   const updateLog = useCallback((updates: Partial<DailyLog>) => {

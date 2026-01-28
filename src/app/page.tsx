@@ -13,7 +13,9 @@ import { SongLink } from "@/components/ui/song-link";
 import { AVAILABLE_ICONS } from "@/components/ui/icon-picker";
 import { cn } from "@/lib/utils";
 import { LandingPage } from "@/components/ui/landing-page";
+import { HomeSkeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
+
 
 export default function Home() {
   const [selectedDate, setSelectedDate] = useState(format(new Date(), "yyyy-MM-dd"));
@@ -62,12 +64,9 @@ export default function Home() {
   };
 
   if (loading) {
-    return (
-        <div className="flex h-screen items-center justify-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-        </div>
-    );
+    return <HomeSkeleton />;
   }
+
 
   if (!user) {
     return <LandingPage />;

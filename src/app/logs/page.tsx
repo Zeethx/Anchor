@@ -18,6 +18,9 @@ interface LogEntry {
   note?: string | null;
 }
 
+import { LogsSkeleton } from "@/components/ui/skeleton";
+import { useUser } from "@/components/providers/user-provider";
+
 export default function LogsPage() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,20 +32,21 @@ export default function LogsPage() {
   const [expandedNotes, setExpandedNotes] = useState<Record<string, boolean>>({});
   const [customHabits, setCustomHabits] = useState<Array<{ name: string; icon: string }>>([]);
 
-  const supabase = createClient();
+  const { user, supabase, loading: authLoading } = useUser();
 
   useEffect(() => {
     async function fetchLogs() {
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      if (authLoading) return;
       if (!user) {
         setLoading(false);
         return;
       }
 
+      setLoading(true);
+
       // Fetch user settings and logs
       const [settingsRes, logsRes] = await Promise.all([
-        supabase.from("users").select("custom_habits").eq("id", user.id).single(),
+        supabase.from("users").select("custom_habits").eq("id", user.id).maybeSingle(),
         supabase.from("daily_logs").select("*").eq("user_id", user.id).order("date", { ascending: false })
       ]);
       
@@ -58,7 +62,7 @@ export default function LogsPage() {
     }
 
     fetchLogs();
-  }, [supabase]);
+  }, [supabase, user, authLoading]);
 
   function calculateStreak(data: LogEntry[]) {
     if (!data.length) return 0;
@@ -161,12 +165,9 @@ export default function LogsPage() {
   };
 
   if (loading) {
-    return (
-        <div className="flex h-screen items-center justify-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-        </div>
-    );
+    return <LogsSkeleton />;
   }
+
 
   return (
     <div className="mx-auto max-w-md px-4 pb-40 pt-6 space-y-10 min-h-screen">

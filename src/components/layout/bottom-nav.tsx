@@ -7,16 +7,11 @@ import { cn } from "@/lib/utils";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { User } from "@supabase/supabase-js";
+import { useUser } from "@/components/providers/user-provider";
 
 export function BottomNav() {
   const pathname = usePathname();
-  const [user, setUser] = useState<User | null>(null);
-  const supabase = createClient();
-
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUser(data.user));
-  }, [supabase]);
+  const { user } = useUser();
 
   const NAV_ITEMS = [
     { label: "Today", icon: Home, href: "/" },
@@ -25,6 +20,7 @@ export function BottomNav() {
 
   // Don't show on Auth page or if not logged in (Landing page)
   if (pathname.startsWith("/auth") || !user) return null;
+
 
   const isSettingsActive = pathname === "/settings";
 
