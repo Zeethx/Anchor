@@ -14,7 +14,7 @@ import { AVAILABLE_ICONS } from "@/components/ui/icon-picker";
 import { cn } from "@/lib/utils";
 import { LandingPage } from "@/components/ui/landing-page";
 import { HomeSkeleton } from "@/components/ui/skeleton";
-import { OnboardingGuide } from "@/components/ui/onboarding-guide";
+// import { OnboardingGuide } from "@/components/ui/onboarding-guide";
 import { differenceInCalendarDays } from "date-fns";
 import { useToast } from "@/components/ui/toast";
 
@@ -78,8 +78,6 @@ export default function Home() {
 
   return (
     <div className="mx-auto max-w-md px-4 pb-40 pt-6 space-y-8 min-h-screen">
-      <OnboardingGuide />
-      
       <header className="flex items-center justify-between py-2">
         <div className="flex items-center gap-5">
             <MoodSelector 
