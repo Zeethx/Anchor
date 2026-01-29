@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { 
   LogOut, Save, Plus, X, Dumbbell, Brain, Flame, Trophy, 
-  Target, Music as MusicIcon, Check, ChevronUp, ChevronDown
+  Target, Music as MusicIcon, Check, ChevronUp, ChevronDown, CircleOff
 } from "lucide-react";
 
 import { useRouter } from "next/navigation";
@@ -16,7 +16,7 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [email, setEmail] = useState("");
-  const [habits, setHabits] = useState<Array<{ name: string; icon: string }>>([]);
+  const [habits, setHabits] = useState<Array<{ name: string; icon: string; skippable?: boolean }>>([]);
   const [affirmations, setAffirmations] = useState<string[]>([]);
   
   const [newHabitName, setNewHabitName] = useState("");
@@ -61,7 +61,7 @@ export default function SettingsPage() {
 
   const addHabit = async () => {
     if (!newHabitName.trim()) return;
-    const updated = [...habits, { name: newHabitName.trim(), icon: newHabitIcon }];
+    const updated = [...habits, { name: newHabitName.trim(), icon: newHabitIcon, skippable: false }];
     setHabits(updated);
     setNewHabitName("");
     setNewHabitIcon("dumbbell");
@@ -72,6 +72,14 @@ export default function SettingsPage() {
 
   const removeHabit = async (index: number) => {
     const updated = habits.filter((_, i) => i !== index);
+    setHabits(updated);
+    await syncSettings(updated, affirmations);
+  };
+
+  const toggleSkippable = async (index: number) => {
+    const updated = habits.map((h, i) => 
+      i === index ? { ...h, skippable: !h.skippable } : h
+    );
     setHabits(updated);
     await syncSettings(updated, affirmations);
   };
@@ -176,6 +184,19 @@ export default function SettingsPage() {
                       <span className="font-medium">{habit.name}</span>
                     </div>
                     <div className="flex items-center gap-1">
+                      <button 
+                        onClick={() => toggleSkippable(i)}
+                        className={cn(
+                          "flex items-center gap-1.5 rounded-lg px-2 py-1 text-[10px] font-bold transition-all",
+                          habit.skippable 
+                            ? "bg-orange-500/10 text-orange-500" 
+                            : "bg-muted text-muted-foreground/40"
+                        )}
+                        title={habit.skippable ? "Skippable enabled" : "Make skippable"}
+                      >
+                         <CircleOff size={10} />
+                         {habit.skippable ? "Optional" : "Required"}
+                      </button>
                       <button 
                         onClick={() => moveHabit(i, 'up')}
                         disabled={i === 0}

@@ -51,7 +51,7 @@ export function LandingPage() {
               href="/auth" 
               className="inline-flex h-14 items-center justify-center rounded-2xl bg-primary px-10 text-lg font-semibold text-primary-foreground shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95"
             >
-              Anchor Your Day
+              Enter Anchor
             </Link>
           </div>
         </section>

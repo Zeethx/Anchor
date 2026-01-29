@@ -85,3 +85,11 @@
     transform: translateY(0);
   }
 }
+@keyframes progress-fill {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+
+.animate-progress-fill {
+  animation: progress-fill linear forwards;
+}

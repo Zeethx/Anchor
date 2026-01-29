@@ -10,12 +10,13 @@ export interface DailyLog {
   id?: string;
   user_id?: string;
   date: string;
-  habits: Array<{ name: string; done: boolean }>;
+  habits: Array<{ name: string; done: boolean; status?: 'done' | 'pending' | 'skipped' }>;
   word_of_day: string | null;
   today_goal: string | null;
   selected_affirmations: string[];
   song_link: string | null;
   note?: string;
+  mood?: number | null; // 0-4
   created_at?: string;
 }
 
@@ -26,6 +27,7 @@ const DEFAULT_LOG: DailyLog = {
   today_goal: null,
   selected_affirmations: [],
   song_link: null,
+  mood: null,
 };
 
 import { useUser } from "@/components/providers/user-provider";
@@ -34,7 +36,7 @@ export function useDailyLog(selectedDate: string) {
   const [log, setLog] = useState<DailyLog>(DEFAULT_LOG);
   const [loading, setLoading] = useState(true);
   const { user, supabase, loading: authLoading } = useUser();
-  const [customHabits, setCustomHabits] = useState<Array<{ name: string; icon: string }>>([]);
+  const [customHabits, setCustomHabits] = useState<Array<{ name: string; icon: string; skippable?: boolean }>>([]);
   const [customAffirmations, setCustomAffirmations] = useState<string[]>([]);
   const [loggedDates, setLoggedDates] = useState<Set<string>>(new Set());
   const router = useRouter();
@@ -88,10 +90,17 @@ export function useDailyLog(selectedDate: string) {
         const dbHabits = Array.isArray(existingLog.habits) ? existingLog.habits : [];
         const habitsToUse = userRes.data?.custom_habits || [];
         
-        // Merge habits: Keep existing status for habits that still exist, add new habits as done: false
+        // Merge habits: Keep existing status for habits that still exist
         const mergedHabits = habitsToUse.map((h: any) => {
           const existing = dbHabits.find((eh: any) => eh.name === h.name);
-          return existing ? existing : { name: h.name, done: false };
+          if (existing) {
+            // Ensure status exists if it was older format
+            return { 
+              ...existing, 
+              status: existing.status || (existing.done ? 'done' : 'pending') 
+            };
+          }
+          return { name: h.name, done: false, status: 'pending' };
         });
 
         setLog({
@@ -161,7 +170,8 @@ export function useDailyLog(selectedDate: string) {
                     today_goal: newLog.today_goal,
                     selected_affirmations: newLog.selected_affirmations,
                     song_link: newLog.song_link,
-                    note: newLog.note
+                    note: newLog.note,
+                    mood: newLog.mood
                 }, { onConflict: 'user_id, date' });
                 
             if (error) {

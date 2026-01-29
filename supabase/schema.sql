@@ -44,6 +44,7 @@ CREATE TABLE public.daily_logs (
   selected_affirmations jsonb DEFAULT '[]'::jsonb,
   song_link text,
   note text,
+  mood int,
   
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
   

@@ -53,8 +53,9 @@ export function AffirmationSelector({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
-          <h3 className="text-xl font-semibold tracking-tight text-foreground">Morning Affirmations</h3>
-          {!isCompleted && <p className="text-xs text-muted-foreground">Hold to internalize</p>}
+          <h3 className="text-xl font-semibold tracking-tight text-foreground">
+            Morning Affirmations
+          </h3>
         </div>
         {isCompleted && (
           <button 
@@ -69,10 +70,12 @@ export function AffirmationSelector({
 
       {isCompleted && isCollapsed ? (
         <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-500">
-           <div className="flex items-center gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-5">
-            <CheckCircle2 size={20} className="text-primary shrink-0" />
+           <div className="flex items-center gap-4 rounded-2xl border border-primary/20 bg-primary/5 p-5">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/20 text-primary">
+              <CheckCircle2 size={20} />
+            </div>
             <div className="flex-1">
-              <p className="font-bold text-primary">Anchored for the day</p>
+              <p className="text-lg font-bold text-primary">Anchored for the day</p>
                <p className="text-[10px] uppercase tracking-widest text-primary/40">Affirmations internalized</p>
             </div>
           </div>
@@ -100,44 +103,38 @@ export function AffirmationSelector({
                   }}
                   disabled={isAcknowledged}
                   className={cn(
-                    "w-full rounded-2xl border p-5 text-left transition-all duration-300 select-none",
+                    "w-full rounded-2xl border p-5 text-left transition-all duration-300 select-none relative overflow-hidden",
                     isAcknowledged
                       ? "border-border bg-muted/30 opacity-60 scale-[0.98]"
                       : "border-border bg-card hover:border-border/80 active:scale-[0.99]",
                     isPressing && "ring-2 ring-primary/20 bg-primary/5"
                   )}
                 >
-                  <div className="flex items-start gap-4">
-                    <div
-                      className={cn(
-                        "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-500",
-                        isAcknowledged
-                          ? "border-primary/40 bg-primary/40"
-                          : "border-muted-foreground/20",
-                        isPressing && "scale-110 border-primary"
-                      )}
-                    >
-                      {isAcknowledged && <Check size={14} className="text-primary-foreground" />}
-                    </div>
-                    <div className="flex-1 space-y-1">
+                  <div className="flex items-center gap-4">
+                    <div className="flex-1">
                       <p className={cn(
-                        "text-base leading-relaxed transition-colors duration-500",
-                        isAcknowledged ? "text-muted-foreground" : "text-foreground"
+                        "text-lg font-medium transition-colors duration-500",
+                        isAcknowledged ? "text-muted-foreground/60" : "text-foreground"
                       )}>
                         {affirmation}
                       </p>
-                      {isAcknowledged && (
-                        <p className="text-[10px] font-medium uppercase tracking-wider text-primary/60 animate-in fade-in slide-in-from-left-2 duration-700">
-                          <span className="text-primary">Acknowledged</span>
-                        </p>
-                      )}
                     </div>
+                    {isAcknowledged && (
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                        <Check size={20} />
+                      </div>
+                    )}
                   </div>
+                  
+                  {isPressing && (
+                    <div className="absolute bottom-0 left-0 h-0.5 w-full bg-primary/10 overflow-hidden">
+                      <div 
+                        className="h-full bg-primary animate-progress-fill"
+                        style={{ animationDuration: '500ms' }}
+                      />
+                    </div>
+                  )}
                 </button>
-                
-                {isPressing && (
-                  <div className="absolute bottom-0 left-0 h-1 bg-primary/30 transition-all duration-500 rounded-b-2xl" style={{ width: '100%' }} />
-                )}
               </div>
             );
           })}

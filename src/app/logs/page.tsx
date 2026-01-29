@@ -11,15 +11,24 @@ import { AVAILABLE_ICONS } from "@/components/ui/icon-picker";
 interface LogEntry {
   id?: string;
   date: string;
-  habits: Array<{ name: string; done: boolean }>;
+  habits: Array<{ name: string; done: boolean; status?: 'done' | 'pending' | 'skipped' }>;
   word_of_day: string | null;
   today_goal: string | null;
   song_link?: string | null;
   note?: string | null;
+  mood?: number | null;
 }
 
 import { LogsSkeleton } from "@/components/ui/skeleton";
 import { useUser } from "@/components/providers/user-provider";
+
+const MOODS = [
+  { value: 4, label: "Excellent", image: "/Excellent.png" },
+  { value: 3, label: "Good", image: "/Good.png" },
+  { value: 2, label: "Neutral", image: "/Neutral.png" },
+  { value: 1, label: "Bad", image: "/Bad.png" },
+  { value: 0, label: "Awful", image: "/Awful.png" },
+];
 
 export default function LogsPage() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -30,7 +39,7 @@ export default function LogsPage() {
   const [showHabitStreaks, setShowHabitStreaks] = useState(false);
   const [habitStreaks, setHabitStreaks] = useState<Record<string, number>>({});
   const [expandedNotes, setExpandedNotes] = useState<Record<string, boolean>>({});
-  const [customHabits, setCustomHabits] = useState<Array<{ name: string; icon: string }>>([]);
+  const [customHabits, setCustomHabits] = useState<Array<{ name: string; icon: string; skippable?: boolean }>>([]);
 
   const { user, supabase, loading: authLoading } = useUser();
 
@@ -56,7 +65,8 @@ export default function LogsPage() {
 
       if (logsRes.data) {
         setLogs(logsRes.data);
-        calculateStreak(logsRes.data);
+        const habitsToUse = settingsRes.data?.custom_habits || [];
+        calculateStreak(logsRes.data, habitsToUse);
       }
       setLoading(false);
     }
@@ -64,7 +74,7 @@ export default function LogsPage() {
     fetchLogs();
   }, [supabase, user, authLoading]);
 
-  function calculateStreak(data: LogEntry[]) {
+  function calculateStreak(data: LogEntry[], habitsToUse: any[]) {
     if (!data.length) return 0;
     
     let currentStreak = 0;
@@ -85,7 +95,6 @@ export default function LogsPage() {
         const nextDate = data[i+1] ? parseISO(data[i+1].date) : null;
         
         // Count this day if it happened (which it did, if it's in logs)
-        // Ideally checking if "meaningful" work was done, but for now just logging in/creating a row counts
         currentStreak++;
 
         if (!nextDate) break;
@@ -94,61 +103,63 @@ export default function LogsPage() {
         if (gap > 1) break; // Streak broken
     }
     setStreak(currentStreak);
-    calculateHabitStreaks(data);
+    calculateHabitStreaks(data, habitsToUse);
   }
 
-  function calculateHabitStreaks(data: LogEntry[]) {
+  function calculateHabitStreaks(data: LogEntry[], habitsToUse: any[]) {
     const streaks: Record<string, number> = {};
     
-    // Get all unique habit names
-    const allHabits = new Set<string>();
-    data.forEach(log => {
-      log.habits?.forEach(h => allHabits.add(h.name));
-    });
-
-    allHabits.forEach(habitName => {
+    // Only calculate streaks for CURRENT habits
+    habitsToUse.forEach(habitConfig => {
+      const habitName = habitConfig.name;
       let streak = 0;
       const today = new Date();
       
-      // Find the most recent log for this habit
-      let lastCompletedIndex = -1;
+      // Find the most recent log for this habit to check if streak is alive
+      let lastActivityIndex = -1;
       for (let i = 0; i < data.length; i++) {
         const habit = data[i].habits?.find(h => h.name === habitName);
-        if (habit?.done) {
-          lastCompletedIndex = i;
+        const status = habit?.status || (habit?.done ? 'done' : 'pending');
+        
+        if (status === 'done' || status === 'skipped') {
+          lastActivityIndex = i;
           break;
         }
       }
 
-      if (lastCompletedIndex === -1) {
+      if (lastActivityIndex === -1) {
         streaks[habitName] = 0;
         return;
       }
 
-      const lastCompletedDate = parseISO(data[lastCompletedIndex].date);
-      const diff = differenceInCalendarDays(today, lastCompletedDate);
+      const lastActivityDate = parseISO(data[lastActivityIndex].date);
+      const diff = differenceInCalendarDays(today, lastActivityDate);
       
-      // If last completion is more than 1 day ago, streak is broken
+      // If last activity is more than 1 day ago, streak is broken
       if (diff > 1) {
         streaks[habitName] = 0;
         return;
       }
 
-      // Count consecutive completed days
-      for (let i = lastCompletedIndex; i < data.length; i++) {
+      // Count consecutive completed days, allowing skips to pass through
+      for (let i = lastActivityIndex; i < data.length; i++) {
         const habit = data[i].habits?.find(h => h.name === habitName);
-        const nextHabit = i + 1 < data.length ? data[i + 1].habits?.find(h => h.name === habitName) : null;
+        const status = habit?.status || (habit?.done ? 'done' : 'pending');
         
-        if (habit?.done) {
+        if (status === 'done') {
           streak++;
+        } else if (status === 'skipped') {
+          // Carry forward without incrementing
         } else {
+          // Pending or missing breaks the streak
           break;
         }
 
-        if (!nextHabit) break;
+        const nextLog = data[i + 1];
+        if (!nextLog) break;
 
         const currentDate = parseISO(data[i].date);
-        const nextDate = parseISO(data[i + 1].date);
+        const nextDate = parseISO(nextLog.date);
         const gap = differenceInCalendarDays(currentDate, nextDate);
         if (gap > 1) break;
       }
@@ -239,26 +250,37 @@ export default function LogsPage() {
                               </div>
                           </div>
                           
-                          <div className="flex flex-wrap gap-2 justify-end">
+                          <div className="flex items-center gap-4">
+                              {log.mood !== null && log.mood !== undefined && (
+                                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted/50 p-1.5 shadow-sm" title={MOODS.find(m => m.value === log.mood)?.label}>
+                                      <img 
+                                          src={MOODS.find(m => m.value === log.mood)?.image} 
+                                          alt="Mood" 
+                                          className="h-full w-full object-contain"
+                                      />
+                                  </div>
+                              )}
                               {log.note && (
-                                  <button 
-                                     onClick={() => setExpandedNotes(prev => ({ ...prev, [log.date]: !prev[log.date] }))}
-                                     className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-amber-500/60 hover:text-amber-500 transition-all"
-                                  >
-                                      {expandedNotes[log.date] ? <EyeOff size={12} /> : <Eye size={12} />}
-                                      {expandedNotes[log.date] ? "Hide Note" : "View Note"}
-                                  </button>
+                                  <div className="flex justify-end">
+                                      <button
+                                          onClick={() => setExpandedNotes(prev => ({ ...prev, [log.date]: !prev[log.date] }))}
+                                          className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-muted/20 px-2.5 py-1 text-xs text-muted-foreground/80 hover:text-foreground hover:bg-muted/30 transition"
+                                      >
+                                          {expandedNotes[log.date] ? <EyeOff size={14} /> : <Eye size={14} />}
+                                          {expandedNotes[log.date] ? "Hide" : "Note"}
+                                      </button>
+                                  </div>
                               )}
                           </div>
                       </div>
 
                       {log.habits?.some(h => h.done) && (
-                          <div className="flex flex-wrap gap-2 pt-1">
+                          <div className="flex flex-wrap gap-2 pt-1 border-t border-border/30 mt-1">
                               {log.habits.filter(h => h.done).map((habit, idx) => {
                                   const habitConfig = customHabits.find(h => h.name === habit.name);
                                   const Icon = getIconComponent(habitConfig?.icon || "dumbbell");
                                   return (
-                                    <div key={idx} className="flex items-center gap-1 rounded-full bg-blue-500/10 px-2 py-1 text-[10px] font-medium text-blue-500">
+                                    <div key={idx} className="flex items-center gap-1 rounded-lg bg-primary/5 px-2 py-1 text-[10px] font-medium text-primary border border-primary/10">
                                         <Icon size={10} />
                                         <span>{habit.name}</span>
                                     </div>
@@ -268,15 +290,15 @@ export default function LogsPage() {
                       )}
 
                       {log.note && expandedNotes[log.date] && (
-                          <div className="rounded-xl border border-border/50 bg-amber-500/5 p-4 text-sm italic text-muted-foreground leading-relaxed animate-in fade-in slide-in-from-top-2 duration-300">
+                          <div className="rounded-xl border border-amber-200/50 bg-amber-500/5 p-4 text-sm italic text-muted-foreground leading-relaxed animate-in fade-in slide-in-from-top-2 duration-300">
                              "{log.note}"
                           </div>
                       )}
                       
                       {log.song_link && (
-                          <div className="flex items-center gap-2 border-t border-border/50 pt-3">
-                              <Music size={14} className="text-muted-foreground" />
-                              <span className="text-sm text-nowrap text-muted-foreground truncate">{log.song_link}</span>
+                          <div className="flex items-center gap-2 border-t border-border/50 pt-3 mt-1">
+                              <Music size={14} className="text-muted-foreground/60" />
+                              <span className="text-sm text-muted-foreground/80 truncate italic">{log.song_link}</span>
                           </div>
                       )}
                   </div>
@@ -377,7 +399,7 @@ function CalendarDisplay({ logs, currentMonth, setCurrentMonth }: { logs: LogEnt
                 "group relative aspect-square rounded-xl border transition-all flex flex-col items-center justify-center overflow-hidden",
                 !isSameMonth(day, monthStart) && "opacity-20",
                 active ? "border-primary/40 bg-primary/5 hover:border-primary hover:bg-primary/10 shadow-sm cursor-pointer" : "border-border opacity-40 cursor-default",
-                isToday(day) && "ring-2 ring-primary ring-offset-2 ring-offset-background z-10",
+                isToday(day) && "ring-2 ring-primary ring-offset-background z-10",
                 completedAll && "bg-green-500/10 border-green-500/40"
               )}
             >
@@ -385,12 +407,14 @@ function CalendarDisplay({ logs, currentMonth, setCurrentMonth }: { logs: LogEnt
                 {format(day, "d")}
               </span>
               {active && (
-                <div className="mt-1 flex gap-0.5">
-                   {completedAll ? (
-                     <Trophy size={10} className="text-green-500" />
-                   ) : (
-                     <div className="h-1 w-1 rounded-full bg-primary" />
-                   )}
+                <div className="mt-1 flex flex-col items-center gap-1">
+                   <div className="flex gap-0.5">
+                      {completedAll ? (
+                        <Trophy size={10} className="text-green-500" />
+                      ) : (
+                        <div className="h-1 w-1 rounded-full bg-primary" />
+                      )}
+                   </div>
                 </div>
               )}
             </button>
@@ -401,9 +425,20 @@ function CalendarDisplay({ logs, currentMonth, setCurrentMonth }: { logs: LogEnt
       {selectedLog && (
         <div className="rounded-2xl border border-primary/50 bg-primary/5 p-5 animate-in fade-in slide-in-from-top-2 duration-300">
           <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-lg font-bold">{format(parseISO(selectedLog.date), "EEEE, MMM d")}</h3>
-              {selectedLog.today_goal && <p className="text-sm italic text-muted-foreground">"{selectedLog.today_goal}"</p>}
+            <div className="flex items-center gap-4">
+               {selectedLog.mood !== null && selectedLog.mood !== undefined && (
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-background border p-2 shadow-sm" title={MOODS.find(m => m.value === selectedLog.mood)?.label}>
+                      <img 
+                          src={MOODS.find(m => m.value === selectedLog.mood)?.image} 
+                          alt="Mood" 
+                          className="h-full w-full object-contain" 
+                      />
+                  </div>
+               )}
+               <div>
+                 <h3 className="text-lg font-bold">{format(parseISO(selectedLog.date), "EEEE, MMM d")}</h3>
+                 {selectedLog.today_goal && <p className="text-sm italic text-muted-foreground">"{selectedLog.today_goal}"</p>}
+               </div>
             </div>
             <button onClick={() => setSelectedLog(null)} className="text-muted-foreground hover:text-foreground p-1 rounded-full hover:bg-muted transition-colors">
               <X size={20} />
